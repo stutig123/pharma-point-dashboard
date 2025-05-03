@@ -1,16 +1,38 @@
-name: Ansible Deploy
+name: Full DevOps Pipeline
 
 on:
   push:
     branches: [main]
 
 jobs:
-  deploy:
+  devsecops-pipeline:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
+      # -------- SONARCLOUD --------
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=pharma-point-dashboard
+            -Dsonar.organization=stutig123
+            -Dsonar.sources=.
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+
+      # -------- TRIVY SCAN --------
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+
+      # -------- ANSIBLE DEPLOY --------
       - name: Install Ansible
         run: |
           sudo apt update
@@ -21,6 +43,5 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > key.pem
           chmod 600 key.pem
 
-      - name: Deploy using Ansible
-        run: |
-          ansible-playbook -i inventory.ini deploy.yml --private-key key.pem
+      - name: Deploy with Ansible
+        run: ansible-playbook -i inventory.ini deploy.yml --private-key key.pem
