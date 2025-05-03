@@ -1,0 +1,15 @@
+- name: Deploy App
+  hosts: webserver
+  become: true
+
+  tasks:
+    - name: Clone medical store repo
+      git:
+        repo: https://github.com/stutig123/pharma-point-dashboard.git
+        dest: /var/www/medical-store
+
+    - name: Install dependencies
+      shell: |
+        cd /var/www/medical-store
+        npm install
+        npm run build

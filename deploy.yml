@@ -1,0 +1,15 @@
+- name: Deploy App
+  hosts: webserver
+  become: true
+
+  tasks:
+    - name: Clone app
+      git:
+        repo: https://github.com/your-user/pharma-dashboard.git
+        dest: /var/www/pharma-dashboard
+
+    - name: Install and build
+      shell: |
+        cd /var/www/pharma-dashboard
+        npm install
+        npm run build
